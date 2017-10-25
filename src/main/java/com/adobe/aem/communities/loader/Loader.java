@@ -606,7 +606,7 @@ public class Loader {
 											cloudValue = cloudValue.replaceAll("/etc/cloudservices/msft-translation", "cloudconfigs/translation/msft-translation");																												
 										}
 
-										if (!isCommunities64orlater && (cloudName.equals(CLOUDSERVICE_TRANSLATION) || cloudName.equals(CLOUDSERVICE_FACEBOOK) || cloudName.equals(CLOUDSERVICE_TWITTER) || cloudName.equals(CLOUDSERVICE_ANALYTICS)) && !isResourceAvailable(hostname, port, adminPassword, cloudValue)) {
+										if (cloudValue.startsWith("/") && (cloudName.equals(CLOUDSERVICE_TRANSLATION) || cloudName.equals(CLOUDSERVICE_FACEBOOK) || cloudName.equals(CLOUDSERVICE_TWITTER) || cloudName.equals(CLOUDSERVICE_ANALYTICS)) && !isResourceAvailable(hostname, port, adminPassword, cloudValue)) {
 
 											builder.addTextBody(name, "false", ContentType.create("text/plain", MIME.UTF8_CHARSET));
 											logger.warn("Cloud service: " + cloudValue + " is not available on this instance");
@@ -886,7 +886,7 @@ public class Loader {
 									null);
 
 						} else {
-							logger.warn("Not activating the requested path at " + activatePath);
+							logger.info("Not activating the requested path at " + activatePath);
 						}
 
 						continue;
