@@ -82,11 +82,13 @@ public class CreateCommunities extends org.apache.sling.api.servlets.SlingAllMet
 		String minimizeParam = (String) request.getParameter("minimize");
 		String enablementParam = (String) request.getParameter("noenablement");
 		String nomultilingualParam = (String) request.getParameter("nomultilingual");
+		String compositeParam = (String) request.getParameter("composite");
 		String sMaxRetries = (String) request.getParameter("maxretries");
 		
 		boolean minimize = (minimizeParam!=null && minimizeParam.length()>0)?true:false;
 		boolean enablement = (enablementParam!=null && enablementParam.length()>0)?true:false;
 		boolean nomultilingual = (nomultilingualParam!=null && nomultilingualParam.length()>0)?true:false;
+		boolean composite = (compositeParam!=null && compositeParam.length()>0)?true:false;
 		
 		int maxretries = (sMaxRetries==null)?30:Integer.parseInt(sMaxRetries);
 		
@@ -147,9 +149,9 @@ public class CreateCommunities extends org.apache.sling.api.servlets.SlingAllMet
 						out.println("<p>Processing: " + resConfigFile.getName() + "</p>");
 						response.flushBuffer();;
 						if (resConfigFile.getName().contains("author")) {
-							Loader.processLoading(resourceResolver, in, hostname_author, port_author, port, password, analytics, false, true, minimize, enablement, nomultilingual, csvPath, maxretries);
+							Loader.processLoading(resourceResolver, in, hostname_author, port_author, port, password, analytics, false, true, minimize, enablement, nomultilingual, composite, csvPath, maxretries);
 						} else {
-							Loader.processLoading(resourceResolver, in, hostname, port, port, password, analytics, false, true, minimize, enablement, nomultilingual, csvPath, maxretries);
+							Loader.processLoading(resourceResolver, in, hostname, port, port, password, analytics, false, true, minimize, enablement, nomultilingual, composite, csvPath, maxretries);
 						}
 						
 						try {

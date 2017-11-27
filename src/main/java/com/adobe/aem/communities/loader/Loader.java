@@ -207,6 +207,7 @@ public class Loader {
 		boolean minimize = false;
 		boolean noenablement = true;
 		boolean nomultilingual = true;
+		boolean composite = false;
 		int maxretries = MAXRETRIES;
 
 		// Command line options for this tool
@@ -221,6 +222,7 @@ public class Loader {
 		options.addOption("m", false, "Minimize");
 		options.addOption("l", false, "No Multilingual");
 		options.addOption("e", false, "No Enablement");
+		options.addOption("n", false, "Composite Node Store");
 		options.addOption("s", true, "Analytics Endpoint");
 		options.addOption("t", false, "Analytics");
 		options.addOption("w", false, "Retry");
@@ -278,6 +280,11 @@ public class Loader {
 				noenablement = false;
 			}
 
+			// Composite node store
+			if(cmd.hasOption("n")) {
+				composite = true;
+			}
+
 			if (csvfile==null || port == null || hostname == null) {
 				System.out.println("Request parameters: -h hostname -p port -a alternateport -u adminPassword -f path_to_CSV_file -r (true|false, delete content before import) -c (true|false, post additional properties)");
 				System.exit(-1);
@@ -305,7 +312,7 @@ public class Loader {
 
 						InputStream is = zipFile.getInputStream(zipEntry);
 						BufferedReader in = new BufferedReader(new InputStreamReader(is, "UTF-8"));
-						processLoading(null, in, hostname, port, altport, adminPassword, analytics, reset, configure, minimize, noenablement, nomultilingual, csvfile, maxretries);
+						processLoading(null, in, hostname, port, altport, adminPassword, analytics, reset, configure, minimize, noenablement, nomultilingual, composite, csvfile, maxretries);
 
 					}
 				}
@@ -320,7 +327,7 @@ public class Loader {
 			} else if (csvfile.toLowerCase().endsWith(".csv")) {
 
 				InputStreamReader in = new InputStreamReader(new FileInputStream(csvfile), "UTF-8");
-				processLoading(null, in, hostname, port, altport, adminPassword, analytics, reset, configure, minimize, noenablement, nomultilingual, csvfile, maxretries);
+				processLoading(null, in, hostname, port, altport, adminPassword, analytics, reset, configure, minimize, noenablement, nomultilingual, composite, csvfile, maxretries);
 
 			}
 
@@ -332,7 +339,7 @@ public class Loader {
 
 	}
 
-	public static void processLoading(ResourceResolver rr, Reader in, String hostname, String port, String altport, String adminPassword, String analytics, boolean reset, boolean configure, boolean minimize, boolean noenablement, boolean nomultilingual, String csvfile, int maxretries) {
+	public static void processLoading(ResourceResolver rr, Reader in, String hostname, String port, String altport, String adminPassword, String analytics, boolean reset, boolean configure, boolean minimize, boolean noenablement, boolean nomultilingual, boolean composite, String csvfile, int maxretries) {
 
 		String location = null;
 		String userHome = null;
@@ -444,7 +451,8 @@ public class Loader {
 
 					// Let's see if we need to set the current site context for configurations
 					if (action.equals(SITECONTEXT)) {
-						siteContext = record.get(1);
+						// For composite node store setup, we keep a global context always, since we can't write in apps
+						if (!composite) siteContext = record.get(1);
 						templateContext = siteContext.equals("global") ? ("/conf/global") : ("/apps");
 						continue;
 					}
@@ -951,14 +959,22 @@ public class Loader {
 
 								// Special case for 64 and later
 								if (isCommunities64orlater) {
+									
 									// Images remain absolute
 									value = value.replaceAll("/etc/community/badging/images", "/libs/community/badging/images");
+									
+									// For advanced scoring, we need to change to /libs/settings from /etc
+									value = value.replaceAll("/etc/community/scoring/rules/adv-", "/libs/settings/community/scoring/rules/adv-");
+									value = value.replaceAll("/etc/community/badging/rules/adv-", "/libs/settings/community/badging/rules/adv-");
+									
 									// For leaderboards we need absolute paths also
 									if (badgePath.contains("leaderboard")) {
 										value = value.replaceAll("/etc/community", "/conf/" + siteContext + "/settings/community");
-									} else{
+									} else {
 										value = value.replaceAll("/etc/community", "community");	
+										value = value.replaceAll("/libs/settings/community", "community");	
 									}
+									
 								}
 
 								// Special case to accommodate re-factoring of badging images
@@ -1080,7 +1096,7 @@ public class Loader {
 									builder.build(),
 									null);
 
-							// If on 6.4 and a site context if provided, let's move the created template into their proper /app location
+							// If on 6.4 and a site context if provided, let's move the created template into their proper /apps location
 							if (isCommunities64orlater && !siteContext.equals("global") && templateName!=null) {
 
 								String targetPath = action.equals(SITETEMPLATE) ? ("/apps/settings/community/templates/sites/" + title2name(templateName)) : ("/apps/settings/community/templates/groups/" + title2name(templateName));
@@ -1103,7 +1119,7 @@ public class Loader {
 										null);
 
 								// Deleting the source folder in any case
-								doDelete(hostname, port, "/conf/global/settings/community", "admin", adminPassword);
+								doDelete(hostname, port, "/conf/global/settings/community/templates", "admin", adminPassword);
 
 								// Next, on the publisher, same thing...
 								if (!port.equals(altport)) {
@@ -1122,7 +1138,7 @@ public class Loader {
 											new UrlEncodedFormEntity(nameValuePairs),
 											null);
 									// Delete the original folder
-									doDelete(hostname, altport, "/conf/global/settings/community", "admin", adminPassword);
+									doDelete(hostname, altport, "/conf/global/settings/community/templates", "admin", adminPassword);
 
 								}
 
@@ -2258,7 +2274,11 @@ public class Loader {
 						}
 
 						String coverPath = "/content/dam/resources/" + record.get(RESOURCE_INDEX_SITE) + "/" + record.get(2) + "/jcr:content/renditions/cq5dam.thumbnail.319.319.png";
-						String coverSource = "dam";
+						// Making sure the rendition is really there, which might now always be the case if FFMPEG is not installed
+						if (!isResourceAvailable(hostname, port, adminPassword, coverPath) ) {
+							logger.warn("Cover path " + coverPath + " is not available");
+							coverPath="";
+						}						String coverSource = "dam";
 						String assets = "[{\"cover-img-path\":\"" + coverPath + "\",\"thumbnail-source\":\"" + coverSource + "\",\"asset-category\":\"enablementAsset:dam\",\"resource-asset-name\":null,\"state\":\"A\",\"asset-path\":\"/content/dam/resources/" + record.get(RESOURCE_INDEX_SITE) + "/" + assetFileName + "\"}]";
 						nameValuePairs.add(new BasicNameValuePair("assets", assets));
 
