@@ -1176,6 +1176,7 @@ public class Loader {
 								// Special case for 64 and later
 								if (isCommunities64orlater) {
 									value = value.replaceAll("/etc/community/templates/groups/custom", templateContext + "/settings/community/templates/groups");
+									value = value.replaceAll("/etc/community/templates/groups/reference",  "/libs/settings/community/templates/groups");
 								}
 
 								if (value.equals("TRUE")) { value = "true"; }
