@@ -611,7 +611,7 @@ public class Loader {
 
 										// Special case for 64 and later
 										if (isCommunities64orlater && cloudName.equals(CLOUDSERVICE_TRANSLATION)) {
-											cloudValue = cloudValue.replaceAll("/etc/cloudservices/msft-translation", "cloudconfigs/translation/msft-translation");																												
+											cloudValue = "";
 										}
 
 										if (cloudValue.startsWith("/") && (cloudName.equals(CLOUDSERVICE_TRANSLATION) || cloudName.equals(CLOUDSERVICE_FACEBOOK) || cloudName.equals(CLOUDSERVICE_TWITTER) || cloudName.equals(CLOUDSERVICE_ANALYTICS)) && !isResourceAvailable(hostname, port, adminPassword, cloudValue)) {
