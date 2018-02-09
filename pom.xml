@@ -13,7 +13,7 @@
 	<groupId>com.adobe.aem.communities</groupId>
 	<artifactId>aem-communities-loader</artifactId>
 	<packaging>bundle</packaging>
-	<version>0.2.3</version>
+	<version>0.2.4</version>
 	<name>AEM Communities Loader</name>
 	<description>AEM Communities Loader Core Bundle</description>
 	<properties>
