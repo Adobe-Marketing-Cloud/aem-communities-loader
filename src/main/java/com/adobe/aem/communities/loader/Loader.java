@@ -614,6 +614,10 @@ public class Loader {
 											cloudValue = "";
 										}
 
+										if (isCommunities64orlater && cloudName.equals(OPTION_ANALYTICS)) {
+											cloudValue = "";
+										}
+
 										if (cloudValue.startsWith("/") && (cloudName.equals(CLOUDSERVICE_TRANSLATION) || cloudName.equals(CLOUDSERVICE_FACEBOOK) || cloudName.equals(CLOUDSERVICE_TWITTER) || cloudName.equals(CLOUDSERVICE_ANALYTICS)) && !isResourceAvailable(hostname, port, adminPassword, cloudValue)) {
 
 											builder.addTextBody(name, "false", ContentType.create("text/plain", MIME.UTF8_CHARSET));
